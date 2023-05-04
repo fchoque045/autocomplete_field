@@ -59,12 +59,12 @@ class profile_field_autocomplete extends profile_field_base {
             $this->options[$option] = format_string($option, true, ['context' => context_system::instance()]);
         }
         
-        // Set the data key.
+        /// Set the data key
         if ($this->data !== null) {
-            $key = $this->data;
-            if (isset($this->options[$key]) || ($key = array_search($key, $this->options)) !== false) {
-                $this->data = $key;
-                $this->datakey = $key;
+            $this->data = str_replace("\r", '', $this->data);
+            $this->datatmp = explode("\n", $this->data);
+            foreach ($this->datatmp as $key => $value) {
+                $this->datakey[] = array_search($value, $this->options);
             }
         }
         
@@ -78,11 +78,23 @@ class profile_field_autocomplete extends profile_field_base {
     public function edit_field_add($mform) {
 
         $options = array(
-            'multiple' => false,
+            'multiple' => true,
             'noselectionstring' => '',
         );
         $mform->addElement('autocomplete', $this->inputname, format_string($this->field->name), $this->options, $options);
         $mform->setType($this->inputname, PARAM_TEXT);
+    }
+
+    /**
+     * When passing the user object to the form class for the edit profile page
+     * we should load the key for the saved data
+     * Overwrites the base class method.
+     *
+     * @param   object   user object
+     */
+    public function edit_load_user_data($user)
+    {
+        $user->{$this->inputname} = $this->datakey;
     }
 
     /**
@@ -96,9 +108,19 @@ class profile_field_autocomplete extends profile_field_base {
      * @return mixed Data or null
      */
     public function edit_save_data_preprocess($data, $datarecord) {
-        return isset($this->options[$data]) ? $data : null;
+        $string = '';
+        if (is_array($data)) {
+            foreach ($data as $key) {
+                if (isset($this->options[$key])) {
+                    $string .= $this->options[$key]."\r\n";
+                }
+            }
+
+            return substr($string, 0, -2);
+        }
+
+        return isset($this->options[$data]) ? $this->options[$data] : null;
+        // return isset($this->options[$data]) ? $data : null;
     }
     
 }
-
-
