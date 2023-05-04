@@ -108,6 +108,9 @@ class profile_field_autocomplete extends profile_field_base {
      * @return mixed Data or null
      */
     public function edit_save_data_preprocess($data, $datarecord) {
+        if (count($data) == 0) {
+            return $this->field->defaultdata;
+        }
         $string = '';
         if (is_array($data)) {
             foreach ($data as $key) {
@@ -120,7 +123,6 @@ class profile_field_autocomplete extends profile_field_base {
         }
 
         return isset($this->options[$data]) ? $this->options[$data] : null;
-        // return isset($this->options[$data]) ? $data : null;
     }
     
 }
